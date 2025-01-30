@@ -1,0 +1,11 @@
+[package]
+name = "Rust1090"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+couch_rs = "0.12.0"
+dotenv = "0.15.0"
+redis = "0.28.2"
+serde_json = "1.0.138"
+tokio = { version = "1.43.0", features = ["full"] }
