@@ -25,7 +25,11 @@ You can git clone:
 git clone https://github.com/TuinboonDev/Rust1090
 ```
 Setup an instance of <a href="https://couchdb.apache.org/">CouchDB</a><br>
-Copy over an fill in the <a href="">`.env`</a> file and lastly:
+Setup an instance of <a href="https://github.com/antirez/dump1090">Dump1090</a> and running the following command to use it:<br>
+```
+./dump1090 --net --interactive
+```
+Copy over an fill in the <a href="https://github.com/TuinboonDev/temp1090/blob/main/.env">`.env`</a> file and lastly:
 ```
 cargo run
 ```
