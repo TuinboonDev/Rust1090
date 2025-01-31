@@ -29,7 +29,7 @@ Setup an instance of <a href="https://github.com/antirez/dump1090">Dump1090</a> 
 ```
 ./dump1090 --net --interactive
 ```
-Copy over an fill in the <a href="https://github.com/TuinboonDev/temp1090/blob/main/.env">`.env`</a> file and lastly:
+Copy over an fill in the <a href="https://github.com/TuinboonDev/Rust1090/blob/main/.env">`.env`</a> file and lastly:
 ```
 cargo run
 ```
