@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+	<title>Rust1090</title>
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+		integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+		crossorigin="" />
+	<style type="text/css">
+		html {
+			height: 100%
+		}
+
+		body {
+			height: 100%;
+			margin: 0;
+			padding: 0
+		}
+
+		.plane-icon {
+			padding: 0px;
+			margin: 0px;
+		}
+
+		#map_canvas {
+			height: 100%
+		}
+
+		#info {
+			position: absolute;
+			width: 20%;
+			height: 100%;
+			bottom: 0px;
+			right: 0px;
+			top: 0px;
+			background-color: #2a3133;
+			border-left: 1px #f3f3f3 solid;
+			font-family: Helvetica;
+		}
+
+		#info div {
+			padding: 0px;
+			padding-left: 10px;
+			margin: 0px;
+		}
+
+		#info div h1 {
+			margin-top: 10px;
+			font-size: 16px;
+		}
+
+		#info div p {
+			font-size: 14px;
+			color: #f3f3f3;
+		}
+
+		h1 {
+			color: #f3f3f3;
+		}
+
+		:root {
+			--map-tiles-filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+		}
+
+		@media (prefers-color-scheme: dark) {
+			.map-tiles {
+				filter: var(--map-tiles-filter, none);
+			}
+		}
+	</style>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+		integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+		crossorigin=""></script>
+	<script type="text/javascript">
+		Map = null;
+		CenterLat = 45.0;
+		CenterLon = 9.0;
+		Planes = {};
+		NumPlanes = 0;
+		Selected = null
+
+		function getIconForPlane(plane) {
+			var maxalt = 40000;
+			var invalt = maxalt - plane.altitude;
+			var selected = (Selected === plane.hex);
+			if (invalt < 0) invalt = 0;
+
+			var rotation = 45 + 360 - plane.track;
+
+			var selhtml = selected ? 'border:4px solid #FFFFFF; border-radius:30%;' : '';
+
+			var currentZoom = Map.getZoom();
+			var emojiSize = 20 + ((currentZoom - 8) * 5);
+			var clickableSize = 50; 
+
+			var he = `<div style=\"
+                    transform: rotate(-${rotation}deg);
+                    font-size: ${emojiSize}px;
+                    line-height: ${emojiSize}px;
+                    width: ${clickableSize}px;
+                    height: ${clickableSize}px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    ${selhtml};
+                    pointer-events: all;
+                    cursor: pointer;\">
+						&#9992;&#65039;
+                    </div>`;
+
+			var icon = L.divIcon({
+				html: he,
+				className: 'plane-icon',
+				iconSize: [emojiSize, emojiSize],
+				iconAnchor: [clickableSize / 2, clickableSize / 2],
+				popupAnchor: [0, -emojiSize / 2],
+			});
+
+			return icon;
+		}
+
+		function selectPlane(planehex) {
+			if (!Planes[planehex]) return;
+			var old = Selected;
+			Selected = planehex;
+			if (Planes[old]) {
+				Planes[old].marker.setIcon(getIconForPlane(Planes[old]));
+			}
+			Planes[Selected].marker.setIcon(getIconForPlane(Planes[Selected]));
+			refreshSelectedInfo();
+		}
+
+		function selectPlaneCallback(hex) {
+			return function () {
+				return selectPlane(hex);
+			}
+		}
+
+		function refreshGeneralInfo() {
+			var i = document.getElementById('geninfo');
+
+			i.innerHTML = NumPlanes + ' planes on screen.';
+		}
+
+		function refreshSelectedInfo() {
+			var i = document.getElementById('selinfo');
+			var p = Planes[Selected];
+
+			if (!p) return;
+			var html = 'ICAO: ' + p.hex + '<br>';
+			if (p.flight.length) {
+				html += '<b>' + p.flight + '</b><br>';
+			}
+			html += 'Altitude: ' + p.altitude + ' feet<br>';
+			html += 'Speed: ' + p.speed + ' knots<br>';
+			html += 'Coordinates: ' + p.lat + ', ' + p.lon + '<br>';
+			i.innerHTML = html;
+		}
+
+		function fetchData() {
+			$.getJSON('https://track.thijmens.nl/data.json', function (data) {
+				var stillhere = {}
+				for (var j = 0; j < data.length; j++) {
+					var plane = data[j];
+					var marker = null;
+					stillhere[plane.hex] = true;
+					plane.flight = $.trim(plane.flight);
+
+					if (Planes[plane.hex]) {
+						var myplane = Planes[plane.hex];
+						marker = myplane.marker;
+						marker.setLatLng([plane.lat, plane.lon]);
+						marker.setIcon(getIconForPlane(plane));
+						myplane.altitude = plane.altitude;
+						myplane.speed = plane.speed;
+						myplane.lat = plane.lat;
+						myplane.lon = plane.lon;
+						myplane.track = plane.track;
+						myplane.flight = plane.flight;
+						if (myplane.hex == Selected)
+							refreshSelectedInfo();
+					} else {
+						var icon = getIconForPlane(plane);
+						var marker = L.marker([plane.lat, plane.lon], { icon: icon }).addTo(Map);
+						var hex = plane.hex;
+						marker.on('click', selectPlaneCallback(plane.hex));
+						plane.marker = marker;
+						marker.planehex = plane.hex;
+						Planes[plane.hex] = plane;
+					}
+				}
+				NumPlanes = data.length;
+
+				for (var p in Planes) {
+					if (!stillhere[p]) {
+						Map.removeLayer(Planes[p].marker);
+						delete Planes[p];
+					}
+				}
+			});
+		}
+
+		function initialize() {
+			Map = L.map('map_canvas', {
+				minZoom: 3
+			}).setView([52.1010964, 5.270422], 8);
+
+			L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+			//L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+				attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+				maxZoom: 18,
+				id: 'mapbox/streets-v11',
+				accessToken: 'your.mapbox.access.token'
+			}).addTo(Map);
+
+			window.setInterval(function () {
+				fetchData();
+				refreshGeneralInfo();
+			}, 1000);
+		}
+
+	</script>
+</head>
+
+<body onload="initialize()">
+	<div id="map_canvas" style="width:80%; height:100%"></div>
+	<div id="info">
+		<div>
+			<h1>Rust1090</h1>
+			<p id="geninfo"></p>
+			<p id="selinfo">Click on a plane for info.</p>
+		</div>
+	</div>
+</body>
+
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Dashboard</title>
+	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&display=swap" rel="stylesheet">
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			font-family: 'Poppins', sans-serif;
+			background-color: #606364;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+			margin: 0;
+			overflow: hidden;
+		}
+
+		.container {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			grid-template-rows: repeat(3, 1fr);
+			gap: 20px;
+			width: 100vw;
+			height: 100vh;
+			padding: 20px;
+			overflow: hidden;
+		}
+
+		.card {
+			background-color: white;
+			border-radius: 10px;
+			padding: 40px 30px;
+			text-align: center;
+			box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+			font-size: 28px;
+			color: #333;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			transition: transform 0.3s ease-in-out;
+			height: 100%;
+			min-height: 200px;
+		}
+
+		.card:hover {
+			transform: scale(1.05);
+		}
+
+		.card h3 {
+			font-size: 40px;
+			color: #ffffff;
+		}
+
+		span {
+			color: #ffffff;
+			font-size: 4.5em;
+			font-family: 'Poppins';
+			font-weight: 900;
+		}
+
+		a {
+			color: #c3bcc2;
+		}
+
+		.card {
+			background-color: #2a3133;
+		}
+
+		canvas {
+			width: 100%;
+			flex-grow: 1;
+		}
+	</style>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/framer-motion/dist/framer-motion.umd.js"></script>
+</head>
+
+<body>
+	<div class="container">
+		<div class="card">
+			<span>{MESSAGES_P_SECOND}</span>
+			<h3>Messages per second</h3>
+		</div>
+		<div class="card">
+			<canvas id="barChart"></canvas>
+			<h3>Total messages</h3>
+		</div>
+		<div class="card">
+			<span>{UNIQUE_ICAO}</span>
+			<h3>Unique aircraft</h3>
+		</div>
+		<div class="card">
+			<span>{TOTAL_MESSAGES}</span>
+			<h3>Total messages</h3>
+		</div>
+		<div class="card">
+			<span>{UPTIME}</span>
+			<h3>Uptime in seconds</h3>
+		</div>
+		<div class="card">
+			<span>{DISTANCE}</span>
+			<h3>Farthest aircraft in meters</h3>
+		</div>
+		<div class="card">
+			<h3><a href="https://github.com/TuinboonDev/Rust1090">Rust1090</a></h3><br>
+			<h3>Plane tracking <a style="color:red" href="/">here</a></h3>
+		</div>
+		<div class="card">
+			<h3>Based on and inspired by <a href="https://github.com/antirez/dump1090">dump1090</a></h3>
+		</div>
+
+	</div>
+
+	<script>
+		const barCtx = document.getElementById('barChart').getContext('2d');
+		new Chart(barCtx, {
+
+			type: 'bar',
+			data: {
+				labels: {LABELS_MESSAGES_TYPE},
+				datasets: [{
+					label: "Message amount",
+					data: {DATA_MESSAGES_TYPE},
+					backgroundColor: '#ABA4AA',
+				}]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: true
+			}
+		});
+	</script>
+
+</body>
+
+</html>
