@@ -111,7 +111,7 @@ async fn main() {
         let routes = files.or(stats_route);
 
         warp::serve(routes)
-            .run(([0, 0, 0, 0], 3030))
+            .run(([0, 0, 0, 0], env::var("PORT").unwrap().parse::<u16>().unwrap()))
             .await;
     });
 
